@@ -1,0 +1,72 @@
+# frozen_string_literal: true
+
+module Renting
+  class VehicleDelivery < ApplicationRecord
+    self.table_name = "renting_vehicle_deliveries"
+
+    # Associations
+    belongs_to :vehicle, class_name: "Renting::Vehicle"
+    belongs_to :order, class_name: "Renting::Order"
+    belongs_to :scheduled_by, class_name: "User", optional: true
+    belongs_to :confirmed_by, class_name: "User", optional: true
+
+    # Access Contract through Vehicle
+    has_one :contract, through: :vehicle, class_name: "Renting::Contract"
+
+    # AASM State Machine
+    include AASM
+
+    aasm column: :status, no_direct_assignment: true do
+      state :pending_scheduling, initial: true
+      state :scheduled
+      state :confirmed
+      state :cancelled
+
+      event :schedule do
+        transitions from: :pending_scheduling, to: :scheduled
+      end
+
+      event :reschedule do
+        transitions from: :scheduled, to: :scheduled
+      end
+
+      event :confirm do
+        transitions from: [ :pending_scheduling, :scheduled ], to: :confirmed
+      end
+
+      event :cancel do
+        transitions from: [ :pending_scheduling, :scheduled ], to: :cancelled
+      end
+    end
+
+    # Validations
+    validates :scheduled_date, presence: true, if: -> { scheduled? || scheduling? }
+    validates :scheduled_location, presence: true, if: -> { scheduled? || scheduling? }
+    validates :scheduled_by_id, presence: true, if: -> { scheduled? }
+    validates :confirmed_by_id, presence: true, if: -> { confirmed? }
+    validates :confirmed_at, presence: true, if: -> { confirmed? }
+
+    # Callbacks
+    before_validation :set_scheduled_at, if: -> { scheduling? }
+    before_validation :set_confirmed_at, if: -> { confirming? }
+
+    private
+
+    # Helper methods to detect state changes during validation
+    def scheduling?
+      status_changed? && status == "scheduled"
+    end
+
+    def confirming?
+      status_changed? && status == "confirmed"
+    end
+
+    def set_scheduled_at
+      self.scheduled_at ||= Time.current
+    end
+
+    def set_confirmed_at
+      self.confirmed_at ||= Time.current
+    end
+  end
+end

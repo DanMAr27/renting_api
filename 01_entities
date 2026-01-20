@@ -1,0 +1,332 @@
+# frozen_string_literal: true
+
+module V1
+  module Entities
+    module Renting
+      class ContractEntity < Grape::Entity
+        expose :id
+        expose :supplier_contract_number
+        expose :duration_months
+        expose :annual_km
+        expose :monthly_fee
+        expose :start_date
+        expose :expected_end_date
+        expose :actual_end_date
+        expose :status
+        expose :created_at
+        expose :updated_at
+
+        expose :days_until_expiration
+
+        expose :vehicle, using: VehicleEntity
+
+        expose :supplier do |contract|
+          { id: contract.supplier.id, name: contract.supplier.name }
+        end
+
+        expose :company do |contract|
+          { id: contract.company.id, name: contract.company.name }
+        end
+
+        expose :order do |contract|
+          {
+            id: contract.order.id,
+            order_number: contract.order.order_number
+          }
+        end
+      end
+    end
+  end
+end
+
+# frozen_string_literal: true
+
+module V1
+  module Entities
+    module Renting
+      class OrderContractConditionEntity < Grape::Entity
+        expose :id
+        expose :duration_months
+        expose :annual_km
+        expose :monthly_fee
+        expose :initial_payment
+        expose :deposit
+        expose :contract_start_date
+        expose :contract_end_date
+
+        expose :services, using: V1::Entities::Renting::ServiceEntity do |condition|
+          condition.order&.services
+        end
+      end
+    end
+  end
+end
+
+# frozen_string_literal: true
+
+module V1
+  module Entities
+    module Renting
+      class OrderEntity < Grape::Entity
+        # 1. Order Core Info
+        expose :order, merge: true do
+          expose :id
+          expose :order_number
+          expose :status
+          expose :order_date
+          expose :expected_delivery_date
+          expose :actual_delivery_date
+          expose :is_renewal
+          expose :notes
+          expose :created_at
+          expose :updated_at
+        end
+
+        # 2. General Info
+        expose :general_info do
+          expose :company do |order|
+            { id: order.company.id, name: order.company.name }
+          end
+
+          expose :supplier do |order|
+            { id: order.supplier.id, name: order.supplier.name }
+          end
+
+          expose :created_by do |order|
+            { id: order.created_by.id, name: order.created_by.name, email: order.created_by.email }
+          end
+        end
+
+        # 3. Vehicle Spec
+        expose :vehicle_spec, using: OrderVehicleSpecEntity
+
+        # 4. Contract Condition (inc. Services)
+        expose :contract_condition, using: OrderContractConditionEntity
+      end
+    end
+  end
+end
+
+module V1
+  module Entities
+    module Renting
+      class OrderSeriesEntity < Grape::Entity
+        expose :id
+        expose :code
+        expose :prefix
+        expose :name do |series|
+          "#{series.code} (#{series.prefix})"
+        end
+        expose :active
+      end
+    end
+  end
+end
+
+# frozen_string_literal: true
+
+module V1
+  module Entities
+    module Renting
+      class OrderVehicleSpecEntity < Grape::Entity
+        expose :id
+        expose :vehicle_type, using: VehicleTypeEntity
+        expose :fuel_type
+        expose :transmission
+        expose :environmental_label
+        expose :min_seats
+        expose :preferred_color
+        expose :additional_equipment
+      end
+    end
+  end
+end
+
+# frozen_string_literal: true
+
+module V1
+  module Entities
+    module Renting
+      class ServiceEntity < Grape::Entity
+        expose :id
+        expose :code
+        expose :name
+        expose :description
+        expose :active
+      end
+    end
+  end
+end
+
+# frozen_string_literal: true
+
+module V1
+  module Entities
+    module Renting
+      class VehicleEntity < Grape::Entity
+        expose :id
+        expose :license_plate
+        expose :vin
+        expose :color
+        expose :fuel_type
+        expose :transmission
+        expose :delivery_date
+        expose :initial_km
+        expose :current_km
+        expose :status
+        expose :created_at
+        expose :updated_at
+
+        expose :vehicle_type, using: VehicleTypeEntity
+
+        expose :order do |vehicle|
+          {
+            id: vehicle.order.id,
+            order_number: vehicle.order.order_number,
+            status: vehicle.order.status
+          }
+        end
+      end
+    end
+  end
+end
+
+# frozen_string_literal: true
+
+module V1
+  module Entities
+    module Renting
+      class VehicleTypeEntity < Grape::Entity
+        expose :id
+        expose :code
+        expose :name
+        expose :description
+        expose :active
+      end
+    end
+  end
+end
+
+module V1
+  module Entities
+    class AuthorizationApprovalEntity < Grape::Entity
+      expose :id
+      expose :approval_level
+      expose :action
+      expose :notes
+      expose :approved_at
+      expose :created_at
+
+      expose :approver, using: V1::Entities::UserEntity
+    end
+  end
+end
+
+module V1
+  module Entities
+    class AuthorizationRequestEntity < Grape::Entity
+      expose :id
+      expose :authorizable_type
+      expose :authorizable_id
+      expose :amount
+      expose :status
+      expose :current_level
+      expose :max_level
+      expose :created_at
+      expose :completed_at
+
+      expose :requested_by, using: V1::Entities::UserEntity
+      expose :approvals, using: V1::Entities::AuthorizationApprovalEntity
+
+      expose :can_approve do |request, options|
+        current_user = options[:current_user]
+        current_user ? request.can_approve?(current_user) : false
+      end
+    end
+  end
+end
+module V1
+  module Entities
+    class AuthorizationRuleEntity < Grape::Entity
+      expose :id
+      expose :authorizable_type
+      expose :name
+      expose :condition_field
+      expose :condition_operator
+      expose :condition_value
+      expose :required_role
+      expose :approval_level
+      expose :active
+      expose :created_at
+      expose :updated_at
+    end
+  end
+end
+module V1
+  module Entities
+    class CompanyEntity < Grape::Entity
+      expose :id
+      expose :name
+      expose :tax_id
+      expose :active
+    end
+  end
+end
+module V1
+  module Entities
+    class CostCenterEntity < Grape::Entity
+      expose :id
+      expose :code
+      expose :name
+      expose :description
+      expose :active
+    end
+  end
+end
+
+module V1
+  module Entities
+    class DepartmentEntity < Grape::Entity
+      expose :id
+      expose :code
+      expose :name
+      expose :description
+      expose :active
+    end
+  end
+end
+
+module V1
+  module Entities
+    class DivisionEntity < Grape::Entity
+      expose :id
+      expose :code
+      expose :name
+      expose :description
+      expose :active
+    end
+  end
+end
+
+module V1
+  module Entities
+    class SupplierEntity < Grape::Entity
+      expose :id
+      expose :name
+      expose :tax_id
+      expose :active
+    end
+  end
+end
+
+module V1
+  module Entities
+    class UserEntity < Grape::Entity
+      expose :id
+      expose :email
+      expose :name
+      expose :role
+      expose :active
+    end
+  end
+end
