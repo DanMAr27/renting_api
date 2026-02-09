@@ -52,7 +52,7 @@ gem "dotenv-rails", "~> 3.1"
 gem "sprockets-rails"
 gem "kaminari"
 gem "faraday", "~> 2.7"
-gem "ancestry", "~> 4.3"
+gem "ancestry", "~> 5.0"
 gem "aasm", "~> 5.5.2"
 
 group :development, :test do
