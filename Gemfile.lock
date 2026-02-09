@@ -74,8 +74,9 @@ GEM
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
       uri (>= 0.13.1)
-    ancestry (4.3.3)
+    ancestry (5.0.0)
       activerecord (>= 5.2.6)
+      logger
     ast (2.4.3)
     base64 (0.3.0)
     bcrypt_pbkdf (1.1.2)
@@ -238,7 +239,7 @@ GEM
     pp (0.6.3)
       prettyprint
     prettyprint (0.2.0)
-    prism (1.8.0)
+    prism (1.9.0)
     psych (5.3.1)
       date
       stringio
@@ -387,7 +388,7 @@ PLATFORMS
 
 DEPENDENCIES
   aasm (~> 5.5.2)
-  ancestry (~> 4.3)
+  ancestry (~> 5.0)
   bootsnap
   brakeman
   debug
